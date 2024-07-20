@@ -84,14 +84,6 @@ std::vector<Ray> ConvexPolygon::find_axes_of_symmetry(double EPS) const
         if (!axis.is_point_on_ray(centroid, EPS))
             return false;
 
-        Ray axis2(
-            axis.start_point, 
-            Vector(-axis.direction.y, axis.direction.x));
-
-        auto axis_transform =
-            TransformMatrix(axis, axis2)
-            .inverse();
-
         auto &fi = index_of_next_point_in_forward_direction;
         auto &ri = index_of_next_point_in_reverse_direction;
 
@@ -102,16 +94,16 @@ std::vector<Ray> ConvexPolygon::find_axes_of_symmetry(double EPS) const
 
             if (fi != ri)
             {
-                auto ftp =
-                    // forward direction transformed point
-                    axis_transform * points[fi];
+                auto p1 =
+                    // forward direction point
+                    points[fi];
 
-                auto rtp =
-                    // reverse direction transformed point
-                    axis_transform * points[ri];
+                auto p2 =
+                    // reverse direction point reflected along the axis
+                    axis.reflect_point(points[ri]);
 
-                if (std::abs(ftp.x - rtp.x) > EPS
-                    || std::abs(ftp.y) - std::abs(rtp.y) > EPS)
+                if (std::abs(p1.x - p2.x) > EPS
+                    || std::abs(p1.y) - std::abs(p2.y) > EPS)
                     return false;
             }
 
