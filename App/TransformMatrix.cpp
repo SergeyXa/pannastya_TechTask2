@@ -72,6 +72,32 @@ void TransformMatrix::set_scaling(double sx, double sy)
 
 TransformMatrix TransformMatrix::inverse() const
 {
+    if (data[2][0] == 0.0
+     && data[2][1] == 0.0
+     && data[2][2] == 1.0)
+    {
+        double det = data[0][0] * data[1][1] - data[0][1] * data[1][0];
+        if (det == 0)
+            throw std::runtime_error("Matrix is singular and cannot be inverted.");
+
+        double inv_det = 1.0 / det;
+
+        TransformMatrix result;
+        result.data[0][0] = data[1][1] * inv_det;
+        result.data[0][1] = -data[0][1] * inv_det;
+        result.data[0][2] = (data[0][1] * data[1][2] - data[0][2] * data[1][1]) * inv_det;
+
+        result.data[1][0] = -data[1][0] * inv_det;
+        result.data[1][1] = data[0][0] * inv_det;
+        result.data[1][2] = (data[0][2] * data[1][0] - data[0][0] * data[1][2]) * inv_det;
+
+        result.data[2][0] = 0.0;
+        result.data[2][1] = 0.0;
+        result.data[2][2] = 1.0;
+
+        return result;
+    }
+
     TransformMatrix result;
     double det = determinant();
 

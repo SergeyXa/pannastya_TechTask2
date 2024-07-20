@@ -25,6 +25,14 @@ public:
      */
     bool is_point_on_ray(const Point &point, double EPS = EPS_DEFAULT) const;
 
+    /**
+     * @brief Reflects a point across this ray.
+     * @param point The point to reflect.
+     * @param EPS Tolerance for floating point comparisons.
+     * @return The reflected point.
+     */
+    Point reflect_point(const Point &point, double EPS = EPS_DEFAULT) const;
+
     Point start_point; ///< Starting point of the ray.
     Vector direction; ///< Direction vector of the ray.
 };

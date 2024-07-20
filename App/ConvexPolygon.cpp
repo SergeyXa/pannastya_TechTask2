@@ -33,12 +33,40 @@ bool ConvexPolygon::is_convex() const
     return true;
 }
 
+Point ConvexPolygon::get_centroid() const
+{
+    // see https://en.wikipedia.org/wiki/Centroid#Of_a_polygon
+
+    auto n = points.size();
+    double A = 0.0;
+    double C_x = 0.0;
+    double C_y = 0.0;
+
+    for (int i = 0; i < n; ++i) {
+        const Point &current = points[i];
+        const Point &next = points[(i + 1) % n];
+        
+        double commonTerm = current.x * next.y - next.x * current.y;
+        A += commonTerm;
+        C_x += (current.x + next.x) * commonTerm;
+        C_y += (current.y + next.y) * commonTerm;
+    }
+
+    A *= 0.5;
+    C_x /= (6.0 * A);
+    C_y /= (6.0 * A);
+
+    return Point(C_x, C_y);
+}
+
 std::vector<Ray> ConvexPolygon::find_axes_of_symmetry(double EPS) const
 {
     std::vector<Ray> result;
 
     const auto n = points.size();
     const auto half_n = (n + 1) / 2;
+
+    const auto centroid = get_centroid();
 
     auto get_midpoint =
         [](const Point &a, const Point &b) -> Point
@@ -53,15 +81,8 @@ std::vector<Ray> ConvexPolygon::find_axes_of_symmetry(double EPS) const
             size_t index_of_next_point_in_forward_direction,
             size_t index_of_next_point_in_reverse_direction) -> bool
     {
-        auto axis_perpendicular_direction =
-            Vector(-axis.direction.y, axis.direction.x);
-
-        Ray axis2(
-            axis.start_point, axis_perpendicular_direction);
-
-        auto axis_transform =
-            TransformMatrix(axis, axis2)
-            .inverse();
+        if (!axis.is_point_on_ray(centroid, EPS))
+            return false;
 
         auto &fi = index_of_next_point_in_forward_direction;
         auto &ri = index_of_next_point_in_reverse_direction;
@@ -73,16 +94,16 @@ std::vector<Ray> ConvexPolygon::find_axes_of_symmetry(double EPS) const
 
             if (fi != ri)
             {
-                auto ftp =
-                    // forward direction transformed point
-                    axis_transform * points[fi];
+                auto p1 =
+                    // forward direction point
+                    points[fi];
 
-                auto rtp =
-                    // reverse direction transformed point
-                    axis_transform * points[ri];
+                auto p2 =
+                    // reverse direction point reflected along the axis
+                    axis.reflect_point(points[ri]);
 
-                if (std::abs(ftp.x - rtp.x) > EPS
-                    || std::abs(ftp.y) - std::abs(rtp.y) > EPS)
+                if (std::abs(p1.x - p2.x) > EPS
+                    || std::abs(p1.y) - std::abs(p2.y) > EPS)
                     return false;
             }
 

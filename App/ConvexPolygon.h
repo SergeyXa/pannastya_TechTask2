@@ -36,6 +36,14 @@ public:
      */
     auto end() const { return points.end(); }
 
+    /*
+    * @brief Calculated the centroidthe centroid, also known 
+    * as geometric center or center of figure of the convex polygon.
+    * @returns A point that is centroid of the convex polygon.
+    * @see https://en.wikipedia.org/wiki/Centroid
+    */
+    Point get_centroid() const;
+
     /**
      * @brief Finds all axes of symmetry for the polygon.
      * @param EPS Tolerance for floating point comparisons.

@@ -20,3 +20,31 @@ bool Ray::is_point_on_ray(const Point &point, double EPS) const
 
     return true;
 }
+
+Point Ray::reflect_point(const Point &point, double EPS) const
+{
+    // Normalize the direction vector of the ray
+    Vector normalized_direction = direction;
+    double length = std::sqrt(
+        normalized_direction.x * normalized_direction.x 
+        + normalized_direction.y * normalized_direction.y);
+    normalized_direction.x /= length;
+    normalized_direction.y /= length;
+
+    // Compute the dot product of the point and the ray direction
+    double dot = 
+        (point.x - start_point.x) * normalized_direction.x 
+        + (point.y - start_point.y) * normalized_direction.y;
+
+    // Compute the projection of the point onto the ray
+    Point projection(
+        start_point.x + dot * normalized_direction.x,
+        start_point.y + dot * normalized_direction.y
+    );
+
+    // Reflect the point across the projection
+    return Point(
+        2 * projection.x - point.x,
+        2 * projection.y - point.y
+    );
+}
