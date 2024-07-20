@@ -33,12 +33,40 @@ bool ConvexPolygon::is_convex() const
     return true;
 }
 
+Point ConvexPolygon::get_centroid() const
+{
+    // see https://en.wikipedia.org/wiki/Centroid#Of_a_polygon
+
+    auto n = points.size();
+    double A = 0.0;
+    double C_x = 0.0;
+    double C_y = 0.0;
+
+    for (int i = 0; i < n; ++i) {
+        const Point &current = points[i];
+        const Point &next = points[(i + 1) % n];
+        
+        double commonTerm = current.x * next.y - next.x * current.y;
+        A += commonTerm;
+        C_x += (current.x + next.x) * commonTerm;
+        C_y += (current.y + next.y) * commonTerm;
+    }
+
+    A *= 0.5;
+    C_x /= (6.0 * A);
+    C_y /= (6.0 * A);
+
+    return Point(C_x, C_y);
+}
+
 std::vector<Ray> ConvexPolygon::find_axes_of_symmetry(double EPS) const
 {
     std::vector<Ray> result;
 
     const auto n = points.size();
     const auto half_n = (n + 1) / 2;
+
+    const auto centroid = get_centroid();
 
     auto get_midpoint =
         [](const Point &a, const Point &b) -> Point
@@ -53,11 +81,12 @@ std::vector<Ray> ConvexPolygon::find_axes_of_symmetry(double EPS) const
             size_t index_of_next_point_in_forward_direction,
             size_t index_of_next_point_in_reverse_direction) -> bool
     {
-        auto axis_perpendicular_direction =
-            Vector(-axis.direction.y, axis.direction.x);
+        if (!axis.is_point_on_ray(centroid, EPS))
+            return false;
 
         Ray axis2(
-            axis.start_point, axis_perpendicular_direction);
+            axis.start_point, 
+            Vector(-axis.direction.y, axis.direction.x));
 
         auto axis_transform =
             TransformMatrix(axis, axis2)
